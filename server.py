@@ -1,65 +1,67 @@
 from fastmcp import FastMCP
 
-mcp = FastMCP("Flight Booker")
+# Initialize the MCP server
+# This server will handle incoming calls over MCP
+mcp = FastMCP("Sample Server")
 
+# Define a tool to get weather information
+# TODO: can update with actual weather api and use dotenv like other project
 @mcp.tool()
-def search_flights(origin: str, destination: str, date: str) -> str:
-    """
-    Search for available flights.
+def get_weather(location: str) -> str:
+    """Get the current weather for a specified location."""
+    # mockup tool. Currently return hardcoded information
+    return f"Weather in {location}: Sunny, 72°F"
 
-    Parameters:
-      - origin (str): 3-letter IATA code of departure airport (e.g. "JFK").
-      - destination (str): 3-letter IATA code of arrival airport (e.g. "LAX").
-      - date (str): Travel date in YYYY-MM-DD format (e.g. "2025-06-15").
-
-    Returns:
-      A newline-separated list of flights, each in the exact format:
-        FlightID: <ID>, Airline: <Name>, Departs: <HH:MM>, Arrives: <HH:MM>, Price: $<amount>
-      Example:
-        FlightID: AB1234, Airline: Acme Air, Departs: 09:30, Arrives: 12:45, Price: $320
-    """
-    # Mock data
-    return "\n".join([
-        "FlightID: AB1234, Airline: Acme Air, Departs: 09:30, Arrives: 12:45, Price: $320",
-        "FlightID: XY5678, Airline: SkyHigh, Departs: 14:00, Arrives: 17:15, Price: $290",
-    ])
-
+# Define a calculator tool
 @mcp.tool()
-def book_flight(flight_id: str, passenger_name: str) -> str:
-    """
-    Book a flight with the specified flight ID.
+def calculate(expression: str) -> float:
+    """Calculate the result of a mathematical expression."""
+    try:
+        """
+        TODO: IMPORTANT
+        Caution: 
+            - eval() is dangerous in production because it can execute arbitrary Python code
+            - it does not just parse it can run commands, import modules, read files, call functions, etc
+            -ast.literal_eval() is safer because it only parses Python literals
+        Example:
+            1) eval()
+            ---------
+            user_input = "__import__('os').system('rm -rf important_folder')"
+            eval(user_input)
+            2) ast.literal_eval() 
+            ---------------------
+            - will parse code like: "[1,2,3]" or "('a','b')"
+            - will reject code like: "__import__('os').system('ls')"
+        it should be sandboxed 
+        r replaced with a parser like ast.literal_eval
+        """
+        return eval(expression)
+    except Exception as e:
+        return f"Error calculating expression: {str(e)}"
 
-    Parameters:
-      - flight_id (str): The exact FlightID from search_flights output (e.g. "AB1234").
-      - passenger_name (str): Full name of the passenger (e.g. "Alice Smith").
-
-    Returns:
-      A confirmation string in the exact format:
-        BookingID: <UUID>, FlightID: <same as input>, Passenger: <name>, Status: CONFIRMED
-      Example:
-        BookingID: 3f47a2de-9b7c-4b8e-8c1e-123456abcdef, FlightID: AB1234, Passenger: Alice Smith, Status: CONFIRMED
-    """
-    # Mock booking logic (would generate a real UUID in production)
-    booking_id = "3f47a2de-9b7c-4b8e-8c1e-123456abcdef"
-    return f"BookingID: {booking_id}, FlightID: {flight_id}, " f"Passenger: {passenger_name}, Status: CONFIRMED"
-
+# Define a currency converter tool
 @mcp.tool()
-def send_confirmation(booking_id: str, email: str) -> str:
-    """
-    Send the booking confirmation to the passenger’s email.
+def convert_currency(amount: float, from_currency: str, to_currency: str) -> str:
+    """Convert amount from one currency to another."""
+    # This is a simplified example - in reality, you'd want to use real exchange rates
+    rates = {
+        "USD": 1.0,
+        "EUR": 0.85,
+        "GBP": 0.73,
+        "JPY": 110.0,
+        "INR": 83.0
+    }
+    if from_currency not in rates or to_currency not in rates:
+        return f"Unsupported currency pair: {from_currency} to {to_currency}"
 
-    Parameters:
-      - booking_id (str): The BookingID from book_flight output (e.g. "3f47a2de-…").
-      - email (str): Passenger’s email address (e.g. "alice@example.com").
+    converted = amount * (rates[to_currency] / rates[from_currency])
+    return f"{amount} {from_currency} = {converted:.2f} {to_currency}"
 
-    Returns:
-      A success message confirming dispatch:
-        Confirmation sent for BookingID <booking_id> to <email>
-      Example:
-        Confirmation sent for BookingID 3f47a2de-… to alice@example.com
-    """
-    # Mock email send
-    return f"Confirmation sent for BookingID {booking_id} to {email}"
 
+# Run the server
 if __name__ == "__main__":
+    # Launches the MCP server and starts listening for tool invocation requests.
+    # Uses stdio transport mode
     mcp.run()
+    # For sse transport mode simply change line
+    # mcp.run(transport="sse", host="127.0.0.1", port=8000)
