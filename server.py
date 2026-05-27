@@ -1,13 +1,15 @@
 from fastmcp import FastMCP
 
 # Initialize the MCP server
+# This server will handle incoming calls over MCP
 mcp = FastMCP("Sample Server")
 
 # Define a tool to get weather information
+# TODO: can update with actual weather api and use dotenv like other project
 @mcp.tool()
 def get_weather(location: str) -> str:
     """Get the current weather for a specified location."""
-    # mockup tool
+    # mockup tool. Currently return hardcoded information
     return f"Weather in {location}: Sunny, 72°F"
 
 # Define a calculator tool
@@ -16,8 +18,20 @@ def calculate(expression: str) -> float:
     """Calculate the result of a mathematical expression."""
     try:
         """
-        IMPORTANT
-        Caution: eval() is dangerous in production; 
+        TODO: IMPORTANT
+        Caution: 
+            - eval() is dangerous in production because it can execute arbitrary Python code
+            - it does not just parse it can run commands, import modules, read files, call functions, etc
+            -ast.literal_eval() is safer because it only parses Python literals
+        Example:
+            1) eval()
+            ---------
+            user_input = "__import__('os').system('rm -rf important_folder')"
+            eval(user_input)
+            2) ast.literal_eval() 
+            ---------------------
+            - will parse code like: "[1,2,3]" or "('a','b')"
+            - will reject code like: "__import__('os').system('ls')"
         it should be sandboxed 
         r replaced with a parser like ast.literal_eval
         """
@@ -46,4 +60,8 @@ def convert_currency(amount: float, from_currency: str, to_currency: str) -> str
 
 # Run the server
 if __name__ == "__main__":
+    # Launches the MCP server and starts listening for tool invocation requests.
+    # Uses stdio transport mode
     mcp.run()
+    # For sse transport mode simply change line
+    # mcp.run(transport="sse", host="127.0.0.1", port=8000)
