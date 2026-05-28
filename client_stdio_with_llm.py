@@ -87,6 +87,7 @@ async def process_query(query: str) -> str:
     )
     # Extract the assistant message
     assistant_message = first_response.choices[0].message
+    print(f"Assistant message {assistant_message}")
     messages: List[Dict[str, Any]] = [{"role": "user", "content": query}, assistant_message]
 
     # Check if Litellm wants to call any tools
