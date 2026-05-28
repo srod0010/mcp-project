@@ -156,9 +156,13 @@ async def cleanup():
 async def main():
     await connect_to_server("server.py")
 
-    query = """What is 90 multiplied by 68.6.
-               Also tell the weather in Lucknow.
-               Use MCP tools for both."""
+    query = input("Ask a question \n").strip()
+
+    if not query:
+        print("No query provided. using default: \n")
+        query = """What is 90 multiplied by 68.6.
+                Also tell the weather in Lucknow.
+                Use MCP tools for both."""
 
     print(f"\nQuery: {query}")
 
